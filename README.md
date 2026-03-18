@@ -2,24 +2,37 @@
 
 The _Parcel_ encapsulation language brings simple modules, called _parcels_, to C.
 
-#### `foo.c`
+**`foo.c`**
 ```C
 #include <stdio.h>
 
-#pragma parcel hello { output }
+#pragma parcel first { Message output }
 #include "export/hello"
 
-void output() {
-    printf("Hello, World!");
+typedef char * Message;
+
+void output(Message message) {
+    printf("%s\n", message);
 }
 ```
 
-#### `main.c`
+**`bar.c`**
 ```C
-#include "import/hello.my"
+#include "import/first.this"
+
+#pragma parcel second { message }
+#include "export/second"
+
+const this_Message message = "Hello, world!";
+```
+
+**`main.c`**
+```C
+#include "import/first.this"
+#include "import/second.that"
 
 int main() {
-    my_output();
+    this_output(that_message);
     return 0;
 }
 ```
