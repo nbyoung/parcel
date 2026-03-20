@@ -122,14 +122,26 @@ out_Output output = print;
 
 `output/null.c` exports an identically shaped parcel with a body that does nothing — a valid substitute that requires no changes at call sites.
 
-`main.c` imports both implementations and calls each through its stem:
+`output.h` is a selector header that conditionally imports one implementation based on a compiler flag, and defines `OUT` to match its stem:
 
 ```c
-#include "import/output/stdout.std"
-#include "import/output/null.null"
+#include "import/output/_.out"
 
-std->output(greeting);   // prints
-null->output(greeting);  // silent
+#if defined(OUT_NULL)
+#include "import/output/null.null"
+#define OUT null
+#else
+#include "import/output/stdout.std"
+#define OUT std
+#endif
 ```
 
-`std->output` and `null->output` use the variable/function stem pointer form. The `out_Greeting` type, being a typedef, uses the prefix form throughout.
+`main.c` includes the selector and calls through `OUT`, naming neither the implementation nor its stem directly:
+
+```c
+#include "output.h"
+
+OUT->output(greeting);   // prints, or is silent — determined at compile time
+```
+
+Passing `-DOUT_NULL` selects the null implementation; omitting it selects stdout. `main.c` is unchanged in either case. `OUT->output` uses the variable/function stem pointer form; the `out_Greeting` type, being a typedef, uses the prefix form throughout.

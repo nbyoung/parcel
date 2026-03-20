@@ -1,6 +1,27 @@
 # Hello, World!
 
-This example shows how the Parcel language supports **modular abstraction** and **software re-use** through a small program that prints `Hello, world!` — or deliberately does not.
+This example shows how the Parcel language supports **modular abstraction** and **software re-use** through a small program that prints `Hello, world!` — or deliberately does not. After applying a _Parcel_ translator (not shown here, see the [_Parce_](https://github.com/nbyoung/parce) project), selecting between the default `stdout` implementation and the `null` implementation of the same `output` module requires no changes to the source code, — only applying a command line option, `-DOUT_NULL`.
+
+```c
+#include "output.h"
+
+out_Greeting greeting = "Hello, world!";
+
+int main() {
+    OUT->output(greeting);
+    return 0;
+}
+```
+
+```sh
+$ gcc output.c output/stdout.c main.c -o hello && ./hello
+Hello, world!
+```
+
+```sh
+$ gcc output.c output/null.c main.c -DOUT_NULL -o hello && ./hello
+$ # No output!
+```
 
 ## Motivation
 
@@ -15,14 +36,15 @@ output.c            ← interface: defines Greeting and Output types
 output/
   stdout.c          ← implementation: prints to standard output
   null.c            ← implementation: discards output silently
-main.c              ← consumer: calls both implementations
+output.h            ← selector: conditionally imports one implementation
+main.c              ← consumer: calls the selected implementation
 ```
 
 ## Module structure
 
 ![UML class diagram of the hello_world parcel structure](hello_world.svg)
 
-The interface parcel (`output/_`) defines only types. Both implementation parcels (`output/stdout` and `output/null`) conform to it independently. The consumer (`main`) imports all three, using stems to scope their identifiers at call sites — `out_Greeting` for the typedef, `std->output` and `null->output` for the function pointers.
+The interface parcel (`output/_`) defines only types. Both implementation parcels (`output/stdout` and `output/null`) conform to it independently. The selector header (`output.h`) conditionally imports exactly one implementation at build time, controlled by the `-DOUT_NULL` compiler flag. The consumer (`main`) includes the selector and calls through the `OUT` macro — `OUT->output(greeting)` — without naming the implementation directly.
 
 ## The interface parcel (`output.c`)
 
@@ -77,27 +99,42 @@ out_Output output = null;
 
 The null implementation fulfils the same interface with a body that does nothing. It is a valid substitute wherever `stdout` is used — call sites do not change.
 
-## The consumer (`main.c`)
+## The selector (`output.h`)
 
-`main.c` imports the interface parcel (for the `out_Greeting` type) and both implementations, then calls each `output` through its stem.
+`output.h` is a plain C header — not a parcel — that centralises the implementation selection. It imports the interface parcel for the `out_Greeting` type, then conditionally imports exactly one implementation based on the `OUT_NULL` preprocessor flag, and defines the `OUT` macro to match the chosen stem:
 
 ```c
 #include "import/output/_.out"
-#include "import/output/stdout.std"
+
+#if defined(OUT_NULL)
 #include "import/output/null.null"
+#define OUT null
+#else
+#include "import/output/stdout.std"
+#define OUT std
+#endif
+```
+
+Only the selected import is compiled in. Passing `-DOUT_NULL` at the compiler command line selects the null implementation; omitting it selects stdout. The `OUT` macro always resolves to the stem of the active implementation.
+
+## The consumer (`main.c`)
+
+`main.c` includes the selector header and calls `OUT->output(greeting)`. It names neither the implementation nor its stem directly:
+
+```c
+#include "output.h"
 
 out_Greeting greeting = "Hello, world!";
 
 int main() {
-    std->output(greeting);
-    null->output(greeting);
+    OUT->output(greeting);
     return 0;
 }
 ```
 
-`std->output` and `null->output` use the **variable/function stem pointer** form — `stem->identifier` — because `output` is a variable (a function pointer) in each implementation's interface. The `out_Greeting` type, being a typedef, uses the **typedef stem prefix** form.
+`OUT->output` uses the **variable/function stem pointer** form — `stem->identifier` — with the stem supplied indirectly through the `OUT` macro. The `out_Greeting` type, being a typedef, uses the **typedef stem prefix** form directly.
 
-Both calls share the same `greeting` value and the same `out_Output` type, because both implementations are bound to the same interface parcel.
+Switching implementations requires no changes to `main.c` — only the compiler flag changes.
 
 ## Concept map
 
@@ -112,9 +149,12 @@ Both calls share the same `greeting` value and the same `out_Output` type, becau
 | Export with namespace path | `output/stdout.c` — `export/output/stdout` |
 | Export with namespace path | `output/null.c` — `export/output/null` |
 | Import with stem | `output/stdout.c`, `output/null.c` — `import/output/_.out` |
-| Import with stem | `main.c` — `import/output/stdout.std`, `import/output/null.null` |
+| Import with stem | `output/stdout.c`, `output/null.c` — `import/output/_.out` |
+| Import with stem | `output.h` — `import/output/stdout.std`, `import/output/null.null` (conditional) |
 | Typedef stem prefix | `output/stdout.c`, `output/null.c` — `out_Greeting`, `out_Output` |
 | Typedef stem prefix | `main.c` — `out_Greeting` |
-| Variable stem pointer | `main.c` — `std->output`, `null->output` |
+| Variable stem pointer | `main.c` — `OUT->output` (expands to `std->output` or `null->output`) |
+| Selector header | `output.h` — conditionally imports one implementation; defines `OUT` |
+| Build-time selection | `output.h` — `-DOUT_NULL` selects null; default selects stdout |
 | Modular abstraction | `output.c` separates interface from implementation |
-| Software re-use | `main.c` uses both implementations without changing call sites |
+| Implementation substitution | `main.c` unchanged; only compiler flag changes |

@@ -39,6 +39,22 @@ note right of Null
   export/output/null
 end note
 
+' ── Selector header ─────────────────────────────────────────────────
+class "output.h" as Header <<header>> {
+  + {macro} OUT_NULL
+  + {macro} OUT
+}
+note right of Header
+  #include "import/output/_.out"
+  #if defined(OUT_NULL)
+    #include "import/output/null.null"
+    #define OUT null
+  #else
+    #include "import/output/stdout.std"
+    #define OUT std
+  #endif
+end note
+
 ' ── Consumer ────────────────────────────────────────────────────────
 class "main" as Main {
   + greeting : out_Greeting
@@ -46,18 +62,19 @@ class "main" as Main {
   + main() : int
 }
 note right of Main
-  main.c
-  import/output/_.out       (stem: out)
-  import/output/stdout.std  (stem: std)
-  import/output/null.null   (stem: null)
+  #include "output.h"
+  OUT->output(greeting)
+  (-DOUT_NULL to select null)
 end note
 
 ' ── Relationships ───────────────────────────────────────────────────
-Stdout ..|> IOutput : conforms to\n(import/export)
-Null   ..|> IOutput : conforms to\n(import/export)
+Stdout ..|> IOutput : conforms to
+Null   ..|> IOutput : conforms to
 
-Main ..> IOutput : imports\n«stem: out»
-Main ..> Stdout  : imports\n«stem: std»
-Main ..> Null    : imports\n«stem: null»
+Header ..> IOutput : imports\n«stem: out»
+Header ..> Stdout  : imports conditionally\n«stem: std»
+Header ..> Null    : imports conditionally\n«stem: null»
+
+Main ..> Header : includes
 
 @enduml

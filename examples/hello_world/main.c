@@ -1,11 +1,8 @@
-#include "import/output/_.out"
-#include "import/output/stdout.std"
-#include "import/output/null.null"
+#include "output.h"
 
 out_Greeting greeting = "Hello, world!";
 
 int main() {
-    std->output(greeting);
-    null->output(greeting);
+    OUT->output(greeting);
     return 0;
 }
