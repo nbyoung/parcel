@@ -127,7 +127,7 @@ out_Output output = print;
 ```c
 #include "import/output/_.out"
 
-#if defined(OUT_NULL)
+#if defined(OUTPUT_NULL)
 #include "import/output/null.null"
 #define OUT null
 #else
@@ -144,4 +144,4 @@ out_Output output = print;
 OUT->output(greeting);   // prints, or is silent — determined at compile time
 ```
 
-Passing `-DOUT_NULL` selects the null implementation; omitting it selects stdout. `main.c` is unchanged in either case. `OUT->output` uses the variable/function stem pointer form; the `out_Greeting` type, being a typedef, uses the prefix form throughout.
+Passing `-DOUTPUT_NULL` selects the null implementation; omitting it selects stdout. `main.c` is unchanged in either case. `OUT->output` uses the variable/function stem pointer form; the `out_Greeting` type, being a typedef, uses the prefix form throughout.

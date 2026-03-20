@@ -41,12 +41,12 @@ end note
 
 ' ── Selector header ─────────────────────────────────────────────────
 class "output.h" as Header <<header>> {
-  + {macro} OUT_NULL
+  + {macro} OUTPUT_NULL
   + {macro} OUT
 }
 note right of Header
   #include "import/output/_.out"
-  #if defined(OUT_NULL)
+  #if defined(OUTPUT_NULL)
     #include "import/output/null.null"
     #define OUT null
   #else
@@ -64,7 +64,7 @@ class "main" as Main {
 note right of Main
   #include "output.h"
   OUT->output(greeting)
-  (-DOUT_NULL to select null)
+  (-DOUTPUT_NULL to select null)
 end note
 
 ' ── Relationships ───────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 # Hello, World!
 
-This example shows how the Parcel language supports **modular abstraction** and **software re-use** through a small program that prints `Hello, world!` — or deliberately does not. After applying a _Parcel_ translator (not shown here, see the [_Parce_](https://github.com/nbyoung/parce) project), selecting between the default `stdout` implementation and the `null` implementation of the same `output` module requires no changes to the source code, — only applying a command line option, `-DOUT_NULL`.
+This example shows how the Parcel language supports **modular abstraction** and **software re-use** through a small program that prints `Hello, world!` — or deliberately does not. After applying a _Parcel_ translator (not shown here, see the [_Parce_](https://github.com/nbyoung/parce) project), selecting between the default `stdout` implementation and the `null` implementation of the same `output` module requires no changes to the source code, — only applying a command line option, `-DOUTPUT_NULL`.
 
 ```c
 #include "output.h"
@@ -19,7 +19,7 @@ Hello, world!
 ```
 
 ```sh
-$ gcc output.c output/null.c main.c -DOUT_NULL -o hello && ./hello
+$ gcc output.c output/null.c main.c -DOUTPUT_NULL -o hello && ./hello
 $ # No output!
 ```
 
@@ -44,7 +44,7 @@ main.c              ← consumer: calls the selected implementation
 
 ![UML class diagram of the hello_world parcel structure](hello_world.svg)
 
-The interface parcel (`output/_`) defines only types. Both implementation parcels (`output/stdout` and `output/null`) conform to it independently. The selector header (`output.h`) conditionally imports exactly one implementation at build time, controlled by the `-DOUT_NULL` compiler flag. The consumer (`main`) includes the selector and calls through the `OUT` macro — `OUT->output(greeting)` — without naming the implementation directly.
+The interface parcel (`output/_`) defines only types. Both implementation parcels (`output/stdout` and `output/null`) conform to it independently. The selector header (`output.h`) conditionally imports exactly one implementation at build time, controlled by the `-DOUTPUT_NULL` compiler flag. The consumer (`main`) includes the selector and calls through the `OUT` macro — `OUT->output(greeting)` — without naming the implementation directly.
 
 ## The interface parcel (`output.c`)
 
@@ -101,12 +101,12 @@ The null implementation fulfils the same interface with a body that does nothing
 
 ## The selector (`output.h`)
 
-`output.h` is a plain C header — not a parcel — that centralises the implementation selection. It imports the interface parcel for the `out_Greeting` type, then conditionally imports exactly one implementation based on the `OUT_NULL` preprocessor flag, and defines the `OUT` macro to match the chosen stem:
+`output.h` is a plain C header — not a parcel — that centralises the implementation selection. It imports the interface parcel for the `out_Greeting` type, then conditionally imports exactly one implementation based on the `OUTPUT_NULL` preprocessor flag, and defines the `OUT` macro to match the chosen stem:
 
 ```c
 #include "import/output/_.out"
 
-#if defined(OUT_NULL)
+#if defined(OUTPUT_NULL)
 #include "import/output/null.null"
 #define OUT null
 #else
@@ -115,7 +115,7 @@ The null implementation fulfils the same interface with a body that does nothing
 #endif
 ```
 
-Only the selected import is compiled in. Passing `-DOUT_NULL` at the compiler command line selects the null implementation; omitting it selects stdout. The `OUT` macro always resolves to the stem of the active implementation.
+Only the selected import is compiled in. Passing `-DOUTPUT_NULL` at the compiler command line selects the null implementation; omitting it selects stdout. The `OUT` macro always resolves to the stem of the active implementation.
 
 ## The consumer (`main.c`)
 
@@ -155,6 +155,6 @@ Switching implementations requires no changes to `main.c` — only the compiler 
 | Typedef stem prefix | `main.c` — `out_Greeting` |
 | Variable stem pointer | `main.c` — `OUT->output` (expands to `std->output` or `null->output`) |
 | Selector header | `output.h` — conditionally imports one implementation; defines `OUT` |
-| Build-time selection | `output.h` — `-DOUT_NULL` selects null; default selects stdout |
+| Build-time selection | `output.h` — `-DOUTPUT_NULL` selects null; default selects stdout |
 | Modular abstraction | `output.c` separates interface from implementation |
 | Implementation substitution | `main.c` unchanged; only compiler flag changes |
