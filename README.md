@@ -95,6 +95,8 @@ The relationship between export path and import path is not specified by the Par
 
 The [`examples/hello_world`](examples/hello_world/) example demonstrates modular abstraction using an interface parcel and two interchangeable implementations.
 
+![UML class diagram of the hello_world example](examples/hello_world/hello_world.svg)
+
 `output.c` declares a **default parcel** (`_`) containing only types — a `Greeting` typedef and an `Output` function-pointer typedef. This is the interface:
 
 ```c

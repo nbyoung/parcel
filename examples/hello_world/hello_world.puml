@@ -1,0 +1,63 @@
+@startuml hello_world
+
+skinparam classAttributeIconSize 0
+
+' ── Interface parcel ────────────────────────────────────────────────
+interface "output / _" as IOutput <<parcel _>> {
+  + {typedef} Greeting
+  + {typedef} Output
+}
+note right of IOutput
+  output.c
+  #pragma parcel _ { Greeting Output }
+  export/output
+end note
+
+' ── Implementation: stdout ──────────────────────────────────────────
+class "output / stdout" as Stdout <<parcel stdout>> {
+  + output : out_Output
+  --
+  - print(greeting : out_Greeting) : void
+}
+note right of Stdout
+  output/stdout.c
+  import/output/_.out
+  #pragma parcel stdout { output }
+  export/output/stdout
+end note
+
+' ── Implementation: null ────────────────────────────────────────────
+class "output / null" as Null <<parcel null>> {
+  + output : out_Output
+  --
+  - null(greeting : out_Greeting) : void
+}
+note right of Null
+  output/null.c
+  import/output/_.out
+  #pragma parcel null { output }
+  export/output/null
+end note
+
+' ── Consumer ────────────────────────────────────────────────────────
+class "main" as Main {
+  + greeting : out_Greeting
+  --
+  + main() : int
+}
+note right of Main
+  main.c
+  import/output/_.out       (stem: out)
+  import/output/stdout.std  (stem: std)
+  import/output/null.null   (stem: null)
+end note
+
+' ── Relationships ───────────────────────────────────────────────────
+Stdout ..|> IOutput : conforms to\n(import/export)
+Null   ..|> IOutput : conforms to\n(import/export)
+
+Main ..> IOutput : imports\n«stem: out»
+Main ..> Stdout  : imports\n«stem: std»
+Main ..> Null    : imports\n«stem: null»
+
+@enduml

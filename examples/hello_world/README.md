@@ -18,6 +18,12 @@ output/
 main.c              ← consumer: calls both implementations
 ```
 
+## Module structure
+
+![UML class diagram of the hello_world parcel structure](hello_world.svg)
+
+The interface parcel (`output/_`) defines only types. Both implementation parcels (`output/stdout` and `output/null`) conform to it independently. The consumer (`main`) imports all three, using stems to scope their identifiers at call sites — `out_Greeting` for the typedef, `std->output` and `null->output` for the function pointers.
+
 ## The interface parcel (`output.c`)
 
 `output.c` defines the shared vocabulary for all output implementations: a `Greeting` type and an `Output` function-pointer type. It declares and exports a **default parcel** (`_`), placing it in the `output` namespace.
