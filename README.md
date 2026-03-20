@@ -2,56 +2,132 @@
 
 The _Parcel_ encapsulation language brings simple modules, called _parcels_, to C.
 
-**`foo.c`**
-```C
-#include <stdio.h>
+## Motivation
 
-#pragma parcel first { Message output }
-#include "export/hello"
+C has headers and translation units, but no module system. A header declares an interface, but nothing in the language separates the interface from the implementation, prevents a caller from depending on internal identifiers, or allows two files to provide alternative implementations of the same abstraction. The result is that large C programs tend toward tight coupling: callers depend on concrete implementations, and substituting behaviour requires changing call sites.
 
-typedef char * Message;
+Parcel adds a lightweight module layer on top of standard C. A _parcel_ is a named set of identifiers — typedefs, variables, or functions — declared in one file and made available in others. A file that declares an interface parcel containing only types can be imported by any number of implementation files, each of which exports a conforming parcel under its own name. A consumer imports whichever implementation it needs. The types are consistent across all implementations, and call sites do not change when implementations are substituted.
 
-void output(Message message) {
-    printf("%s\n", message);
-}
+Parcel operates at the source level, before the preprocessor. It requires no changes to the compiler toolchain.
+
+## Translator
+
+Using Parcel on real programs requires a translation tool that analyses the parcel declarations and generates the `export/` and `import/` files that implement the modular semantics. You run the translator as a _pre_-preprocessor: it generates the required files, and the standard preprocessor then includes them in the usual way. The compiler toolchain is otherwise unchanged.
+
+See the [_Parce_](https://github.com/nbyoung/parce) project for a translator implementation.
+
+## Concepts
+
+### Declaring a parcel
+
+A parcel is declared with a `#pragma` statement that names the parcel and lists the local identifiers it exports:
+
+```c
+#pragma parcel <name> { [<identifier> ...] }
 ```
 
-**`bar.c`**
-```C
-#include "import/first.this"
+The interface lists the typedefs, variables, and functions defined in the same file that the parcel makes available to importers.
 
-#pragma parcel second { message }
-#include "export/second"
+By convention, the name `_` denotes the **default parcel** for a file — typically an interface or utility parcel that other files import to obtain shared types. Named parcels (any name other than `_`) are typically implementations or components.
 
-const this_Message message = "Hello, world!";
+### Exporting a parcel
+
+A parcel is exported from the same file in which it is declared, by including a generated export file:
+
+```c
+#include "export/<path>/<name>"
 ```
 
-**`main.c`**
-```C
-#include "import/first.this"
-#include "import/second.that"
+The export path places the parcel in a programmer-defined namespace. `export` is almost always the literal base segment; `<path>` reflects the filesystem location; `<name>` matches the parcel name from the `#pragma`.
 
-int main() {
-    this_output(that_message);
-    return 0;
-}
+The export statement must appear in the same file as the corresponding `#pragma parcel` declaration.
+
+### Importing a parcel
+
+A parcel is imported into a different file by including a generated import file, supplying a _stem_:
+
+```c
+#include "import/<path>/<name>.<stem>"
 ```
 
-## Syntax
+The path and name identify which exported parcel to import. The stem is a short mnemonic identifier that scopes the imported identifiers in the local file, preventing name collisions when multiple parcels are in use.
 
-| Parcel | |
+### Stem application
+
+The stem is applied differently depending on the kind of identifier being imported:
+
+**Typedefs** use a simple underscore-separated prefix:
+
+```c
+stem_Identifier
+```
+
+For example, a typedef `Greeting` imported with stem `out` becomes `out_Greeting`.
+
+**Variables and functions** use a struct-type pointer:
+
+```c
+stem->identifier
+```
+
+For example, a variable `output` imported with stem `std` is accessed as `std->output`.
+
+This distinction means that types read naturally in declarations, while variables and functions carry an explicit access path that makes the origin of each identifier visible at the call site.
+
+## Syntax reference
+
+| Statement | |
 |--|--|
-| `#pragma parcel <parcel> { [<identifier>] ... }` | Declare a parcel with a name and identifiers |
-| `#include "<export>/<path>/<parcel>"` | Export to a path within the program's parcel namespace |
-| `#include "<import>/<path>/<parcel>.<stem>"` | Import from the namespace using `<stem>` as a local prefix |
+| Declare | `#pragma parcel <name> { [<identifier> ...] }` |
+| Export | `#include "export/<path>/<name>"` |
+| Import | `#include "import/<path>/<name>.<stem>"` |
 
-| _where_ | | |
-|--|--|--|
-| `<parcel>` | Name | Any C identifier, including `_` (underscore) |
-| `[<identifier>] ...` | Interface | Identifiers of typedefs, variables and functions in the exporting file |
-| `<export>` | Export base | Typically `export` |
-| `<import>` | Import base | Typically `import` |
-| `<path>` | Path | Path within the parcel namepace `<segment1>/<segment2>/...` |
-| `<stem>` | Prefix | C identifier fragment applied to local identifiers |
+| Term | Meaning |
+|--|--|
+| `<name>` | Any valid C identifier; `_` by convention for a default (interface) parcel |
+| `{ [<identifier> ...] }` | The parcel interface: typedefs, variables, and functions defined in the local file |
+| `<path>` | Namespace path, typically reflecting the filesystem location of the parcel |
+| `<stem>` | A short C identifier fragment scoping imported identifiers in the local file |
 
+The relationship between export path and import path is not specified by the Parcel language; it is defined by the translator implementation. In practice, paths typically reflect the filesystem structure of the program. See the [examples](examples/) for illustration.
 
+## Example
+
+The [`examples/hello_world`](examples/hello_world/) example demonstrates modular abstraction using an interface parcel and two interchangeable implementations.
+
+`output.c` declares a **default parcel** (`_`) containing only types — a `Greeting` typedef and an `Output` function-pointer typedef. This is the interface:
+
+```c
+#pragma parcel _ { Greeting Output }
+#include "export/output"
+
+typedef char *Greeting;
+typedef void (*Output)(Greeting greeting);
+```
+
+`output/stdout.c` imports the interface, defines a conforming implementation, and exports it as the named parcel `stdout`. The internal function `print` is `static` and not in the interface; only the `output` function pointer is exported:
+
+```c
+#include "import/output/_.out"
+
+#pragma parcel stdout { output }
+#include "export/output/stdout"
+
+static void print(out_Greeting greeting) { ... }
+
+out_Output output = print;
+```
+
+`output/null.c` exports an identically shaped parcel with a body that does nothing — a valid substitute that requires no changes at call sites.
+
+`main.c` imports both implementations and calls each through its stem:
+
+```c
+#include "import/output/stdout.std"
+#include "import/output/null.null"
+
+std->output(greeting);   // prints
+null->output(greeting);  // silent
+```
+
+`std->output` and `null->output` use the variable/function stem pointer form. The `out_Greeting` type, being a typedef, uses the prefix form throughout.
