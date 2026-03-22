@@ -52,10 +52,11 @@ The interface parcel (`output/_`) defines only types. Both implementation parcel
 
 ```c
 #pragma parcel _ { Greeting Output }
-#include "export/output"
 
 typedef char *Greeting;
 typedef void (*Output)(Greeting greeting);
+
+#include "export/output"
 ```
 
 The interface contains no behaviour — only types. Both `Greeting` and `Output` are typedefs, so implementations import them using the **typedef stem prefix** form (`stem_Identifier`).
@@ -72,13 +73,14 @@ Each implementation imports the interface with stem `out` and exports its own **
 #include "import/output/_.out"
 
 #pragma parcel stdout { output }
-#include "export/output/stdout"
 
 static void print(out_Greeting greeting) {
     printf("%s\n", greeting);
 }
 
 out_Output output = print;
+
+#include "export/output/stdout"
 ```
 
 The `print` function is `static` — it is an internal implementation detail, invisible outside this file. Only the `output` function pointer is in the parcel interface. Callers see the abstraction (`output`), not the mechanism (`print`).
@@ -89,12 +91,13 @@ The `print` function is `static` — it is an internal implementation detail, in
 #include "import/output/_.out"
 
 #pragma parcel null { output }
-#include "export/output/null"
 
 static void null(out_Greeting greeting) {
 }
 
 out_Output output = null;
+
+#include "export/output/null"
 ```
 
 The null implementation fulfils the same interface with a body that does nothing. It is a valid substitute wherever `stdout` is used — call sites do not change.

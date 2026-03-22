@@ -10,12 +10,6 @@ Parcel adds a lightweight module layer on top of standard C. A _parcel_ is a nam
 
 Parcel operates at the source level, before the preprocessor. It requires no changes to the compiler toolchain.
 
-## Translator
-
-Using Parcel on real programs requires a translation tool that analyses the parcel declarations and generates the `export/` and `import/` files that implement the modular semantics. You run the translator as a _pre_-preprocessor: it generates the required files, and the standard preprocessor then includes them in the usual way. The compiler toolchain is otherwise unchanged.
-
-See the [_Parce_](https://github.com/nbyoung/parce) project for a translator implementation.
-
 ## Concepts
 
 ### Declaring a parcel
@@ -91,6 +85,12 @@ This distinction means that types read naturally in declarations, while variable
 
 The relationship between export path and import path is not specified by the Parcel language; it is defined by the translator implementation. In practice, paths typically reflect the filesystem structure of the program. See the [examples](examples/) for illustration.
 
+## Translator
+
+Using Parcel in practice requires a translation tool that analyses the parcel declarations and generates the `export/` and `import/` files that implement the modular semantics. You run the translator as a _pre_-preprocessor: it generates the required files, and the standard preprocessor then includes them in the usual way. The compiler toolchain is otherwise unchanged.
+
+See the [_Parcelator_](https://github.com/nbyoung/parcelator) project for a translator implementation.
+
 ## Example
 
 The [`examples/hello_world`](examples/hello_world/) example demonstrates modular abstraction using an interface parcel and two interchangeable implementations.
@@ -101,10 +101,11 @@ The [`examples/hello_world`](examples/hello_world/) example demonstrates modular
 
 ```c
 #pragma parcel _ { Greeting Output }
-#include "export/output"
 
 typedef char *Greeting;
 typedef void (*Output)(Greeting greeting);
+
+#include "export/output"
 ```
 
 `output/stdout.c` imports the interface, defines a conforming implementation, and exports it as the named parcel `stdout`. The internal function `print` is `static` and not in the interface; only the `output` function pointer is exported:
@@ -113,11 +114,12 @@ typedef void (*Output)(Greeting greeting);
 #include "import/output/_.out"
 
 #pragma parcel stdout { output }
-#include "export/output/stdout"
 
 static void print(out_Greeting greeting) { ... }
 
 out_Output output = print;
+
+#include "export/output/stdout"
 ```
 
 `output/null.c` exports an identically shaped parcel with a body that does nothing — a valid substitute that requires no changes at call sites.
