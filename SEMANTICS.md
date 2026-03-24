@@ -1,49 +1,85 @@
 # Parcel Semantics
 
-The _Parcel_ language semantics comprise the _export_ and _import_ `#include` files that express the `parcel` encapsulation. The following sections specify the generated file contents for exported _typedef_, _variable_, and _function_ identifiers. For an overview of the translation process and its diagnostics, see [TRANSLATION.md](TRANSLATION.md).
+The _Parcel_ language semantics comprise the _export_ and _import_ `#include` files that express the `parcel` encapsulation. The following sections specify the generated file contents for exported _typedef_, _variable_, _constant_ and _function_ identifiers. For an overview of the translation process and its diagnostics, see [TRANSLATION.md](TRANSLATION.md).
 
-## Typedefs
-
-### Canonical Name
-
-Each exported identifier is assigned a globally unique _canonical name_ derived from its export path, parcel name, and identifier:
+A typedef identifier exports through a globally-unique canonical name derived from its export path, parcel name, and identifier. Each `/` in the parcel path is replaced with `_`. For example, parcel `p` at path `foo` exporting typedef `T` produces the canonical name `foo_p_T`.
 
 ```
-<path>/<name> { <identifier> }  →  <path_underscored>_<name>_<identifier>
+<path>/<name> { <identifier> }  →  <path_underscored>_<name>_<identifier> # <t_canonical>
 ```
 
-Each `/` in the path is replaced with `_`. For example, a parcel declared as `p` at path `foo` exporting identifier `T` produces the canonical name `foo_p_T`.
+Variable, constant and function identifiers export together through a parcel-level struct. The struct tag and the `const`-qualified variable of that type share a canonical name derived from the export path and parcel name, with each `/` replaced by `_`. For example, path `foo` with parcel name `p` produces a struct with canonical name `foo_p`.
 
-The canonical name is the stable cross-file identity of the exported identifier. Export files introduce it as an alias for the local definition; import files introduce a stem-prefixed alias for it. This two-step indirection means import files depend only on the canonical name, not on the declaring file directly.
+```
+<path>/<name>  →  <path_underscored>_<name> # <s_canonical>
+```
 
-### Export
+## Export
 
-For each typedef identifier `<Id>` in a `#pragma parcel <name> { ... }` declaration, the translator generates one line in `export/<path>/<name>`:
+The export file `export/<path>/<name>` is included after all of the declarations that the parcel exports.
+
+For each typedef `<Id>`, the translator generates one line in `export/<path>/<name>`: `typedef <Id> <t_canonical>;`.
+
+For variable, constant and function identifiers, the translator generates a `const` struct variable with one member per exported identifier:
 
 ```c
-typedef <Id> <canonical>;
+typedef <Id> <t_canonical>;    /* typedef */
+
+struct <s_canonical> {
+    <T> * const <id>;          /* variable: const pointer to mutable value */
+    const <T> * const <id>;    /* constant: const pointer to const value   */
+    <R> (* const <f>)(<P>);    /* function: const function pointer         */
+} const <s_canonical> = { &<id>, &<id>, <f> };
 ```
 
-where `<canonical>` is the canonical name for that identifier. The export file must be included _after_ all typedef definitions it references, so that `<Id>` is already defined when the preprocessor expands the include.
+## Import
 
-### Import
+The import file `import/<path>/<name>.<stem>` is included by any file that uses the parcel. The stem is chosen freely by the importer and scopes the imported names to prevent collisions.
 
-For each typedef identifier `<Id>` in the named parcel, the translator generates one line in `import/<path>/<name>.<stem>`:
+For each typedef identifier `<Id>` in the named parcel, the translator generates one line in `import/<path>/<name>.<stem>`: `typedef <t_canonical> <stem>_<Id>;`. The importer uses `<stem>_<Id>` as the local name throughout the file.
+
+For the struct enclosing any variables, constants or functions, the import file re-declares the enclosing struct type, forward-declares the canonical variable as `extern const`, and defines a `<stem>`-named `const` pointer to it.
 
 ```c
-typedef <canonical> <stem>_<Id>;
+typedef <t_canonical> <stem>_<Id>;
+
+struct <s_canonical> {
+    <T> * const <id>;
+    const <T> * const <id>;
+    <R> (* const <f>)(<P>);
+};
+extern const struct <s_canonical> <s_canonical>;
+const struct <s_canonical> *<stem> = &<s_canonical>;
 ```
 
-The importer uses `<stem>_<Id>` as the local name throughout the file. The stem is chosen freely by the importer and scopes the imported names to prevent collisions.
+### Typedefs
 
-### Example
+The importer applies the `<stem>_<Id>` type wherever it is needed to declare variables, function parameters, return values, struct members, or further typedefs.
 
-**`foo.c`** — declares and exports parcel `p` at path `foo`, exporting typedef `T`:
+### Variables
+
+The importer reads a variable as `*<stem>-><id>` and writes to it as `*<stem>-><id> = <value>`.
+
+### Constants
+
+The importer reads the value as `*<stem>-><id>`; any attempt to assign to `*<stem>-><id>` is a compile-time error.
+
+### Functions
+
+The importer calls the function as `<stem>-><f>(<args>)`.
+
+## Example
+
+**`foo.c`** — declares and exports parcel `p` at path `foo`, exporting typedef `T`, variable `v`, constant `k`, and function `f`:
 
 ```c
-#pragma parcel p { T }
+#pragma parcel p { T v k f }
 
 typedef int T;
+
+int v = 0;
+const int k = 42;
+void f(int x) { /* ... */ }
 
 #include "export/foo/p"
 ```
@@ -52,30 +88,39 @@ typedef int T;
 
 ```c
 typedef T foo_p_T;
-```
 
-Including this after `typedef int T;` makes `foo_p_T` an alias for `int` within `foo.c` and establishes the canonical name for importers.
-
-**`bar.c`** — imports parcel `foo/p` with stem `s`:
-
-```c
-#include "import/foo/p.s"
-
-s_T v;
+struct foo_p {
+    int * const v;
+    const int * const k;
+    void (* const f)(int);
+} const foo_p = { &v, &k, f };
 ```
 
 **`_parcel/import/foo/p.s`** — generated by the translator:
 
 ```c
 typedef foo_p_T s_T;
+
+struct foo_p {
+    int * const v;
+    const int * const k;
+    void (* const f)(int);
+};
+extern const struct foo_p foo_p;
+const struct foo_p *s = &foo_p;
 ```
 
-`s_T` in `bar.c` names the same type as `T` in `foo.c`. The stem `s` is local to `bar.c`; a different file importing the same parcel may use a different stem without affecting the type identity.
+**`bar.c`** — imports parcel `foo/p` with stem `s`:
 
-## Variables
+```c
+#include "import/foo/p.s"
 
-_To be specified._
+s_T t;
 
-## Functions
+int x = *s->v;
+*s->v = 42;
+int y = *s->k;
+s->f(42);
+```
 
-_To be specified._
+`s_T t` declares a local variable with parcel-exported type `T`. `*s->v` reads and modifies parcel-exported variable `v`; `*s->k` reads parcel-exported constant `k` (any attempt to write is rejected at compile time); `s->f(42)` calls parcel-exported function `f`.
