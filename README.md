@@ -148,3 +148,12 @@ OUT->output(greeting);   // prints, or is silent — determined at compile time
 ```
 
 Passing `-DOUTPUT_NULL` selects the null implementation; omitting it selects stdout. `main.c` is unchanged in either case. `OUT->output` uses the variable/function stem pointer form; the `out_Greeting` type, being a typedef, uses the prefix form throughout.
+
+```sh
+$ cd examples/hello_world
+$ make
+stdout implementation:
+Hello, world!
+null implementation (output is suppressed):
+(no output — correct)
+```

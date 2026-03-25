@@ -14,13 +14,11 @@ int main() {
 ```
 
 ```sh
-$ gcc output.c output/stdout.c main.c -o hello && ./hello
+$ make
+stdout implementation:
 Hello, world!
-```
-
-```sh
-$ gcc output.c output/null.c main.c -DOUTPUT_NULL -o hello && ./hello
-$ # No output!
+null implementation (output is suppressed):
+(no output — correct)
 ```
 
 ## Motivation
