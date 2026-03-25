@@ -15,13 +15,13 @@ Follow these links for more details.
 
 ## Motivation
 
-C has headers and translation units, but no modular encapsulation. Header files can be used in place of module interfaces, but the language otherwise fails to:
+C has headers and translation units, but no modular encapsulation. Header files can be used as a substitute for module interfaces, but the language generally fails to:
  
 * Enforce separation of the interface from its implementations
 * Prevent a module caller from depending on internal details
 * Allow multiple alternative implementations of the same interface
 
-Even when using header files as "module" interfaces, large C programs tend toward tight coupling. Module callers come to depend on implementation details. Substituting behaviour requires changing the module call sites.
+Even with disciplined use of header files, large C programs tend toward tight coupling. Programmers come to depend on implementation details. Substituting behaviour requires changing the call sites.
 
 Parcel adds a lightweight module layer on top of standard C. A _parcel_ is a named set of identifiers — typedefs, variables, or functions — declared in one file and made available in others. A file that declares an interface parcel containing only types can be imported by any number of implementation files, each of which exports a conforming parcel under its own name. A module consumer imports whichever implementation it needs. The types are consistent across all implementations, and call sites do not change when substituting alternative implementations.
 

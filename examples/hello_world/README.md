@@ -36,6 +36,10 @@ output/
   null.c            ← implementation: discards output silently
 output.h            ← selector: conditionally imports one implementation
 main.c              ← consumer: calls the selected implementation
+
+_parcel/            ← semantics: contains the translated #include files
+  export/           ← semantics: contains the translated export files
+  import/           ← semantics: contains the translated import files
 ```
 
 ## Module structure
