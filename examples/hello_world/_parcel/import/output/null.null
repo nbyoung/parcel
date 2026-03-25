@@ -1,0 +1,5 @@
+struct output_null {
+    void (* const output)(char *);
+};
+extern const struct output_null output_null;
+const struct output_null *null = &output_null;

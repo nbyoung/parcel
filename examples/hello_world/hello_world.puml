@@ -10,7 +10,7 @@ interface "output / _" as IOutput <<parcel _>> {
 note right of IOutput
   output.c
   #pragma parcel _ { Greeting Output }
-  export/output
+  export/output/_
 end note
 
 ' ── Implementation: stdout ──────────────────────────────────────────

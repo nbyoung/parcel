@@ -1,0 +1,5 @@
+struct output_stdout {
+    void (* const output)(char *);
+};
+extern const struct output_stdout output_stdout;
+const struct output_stdout *std = &output_stdout;

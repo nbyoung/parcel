@@ -3,4 +3,4 @@
 typedef char *Greeting;
 typedef void (*Output)(Greeting greeting);
 
-#include "export/output"
+#include "export/output/_"

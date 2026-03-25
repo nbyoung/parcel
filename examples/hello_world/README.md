@@ -56,7 +56,7 @@ The interface parcel (`output/_`) defines only types. Both implementation parcel
 typedef char *Greeting;
 typedef void (*Output)(Greeting greeting);
 
-#include "export/output"
+#include "export/output/_"
 ```
 
 The interface contains no behaviour — only types. Both `Greeting` and `Output` are typedefs, so implementations import them using the **typedef stem prefix** form (`stem_Identifier`).

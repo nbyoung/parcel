@@ -108,7 +108,7 @@ The [`examples/hello_world`](examples/hello_world/) example demonstrates modular
 typedef char *Greeting;
 typedef void (*Output)(Greeting greeting);
 
-#include "export/output"
+#include "export/output/_"
 ```
 
 `output/stdout.c` imports the interface, defines a conforming implementation, and exports it as the named parcel `stdout`:

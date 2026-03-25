@@ -1,0 +1,3 @@
+struct output_stdout {
+    void (* const output)(char *);
+} const output_stdout = { output };

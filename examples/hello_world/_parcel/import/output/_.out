@@ -1,0 +1,2 @@
+typedef char *out_Greeting;
+typedef void (*out_Output)(out_Greeting greeting);
