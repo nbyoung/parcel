@@ -11,7 +11,7 @@ run: hello_stdout hello_null
 	./hello_stdout
 	@echo "null implementation (output is suppressed):"
 	./hello_null
-	@echo "(no output — correct)"
+	@echo "(No output — Correct!)"
 
 hello_%: output.c output/%.c main.c
 	$(CC) $(CFLAGS) $($*_FLAG) $^ -o $@

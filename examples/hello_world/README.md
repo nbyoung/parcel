@@ -18,7 +18,7 @@ $ make
 stdout implementation:
 Hello, world!
 null implementation (output is suppressed):
-(no output — correct)
+(No output — Correct!)
 ```
 
 ## Motivation
