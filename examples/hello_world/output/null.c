@@ -2,9 +2,7 @@
 
 #pragma parcel null { output }
 
-static void null(out_Greeting greeting) {
+void output(out_Greeting greeting) {
 }
-
-out_Output output = null;
 
 #include "export/output/null"

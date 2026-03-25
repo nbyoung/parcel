@@ -60,13 +60,20 @@ stem_Identifier
 
 For example, a typedef `Greeting` imported with stem `out` becomes `out_Greeting`.
 
-**Variables and functions** use a struct-type pointer:
+**Variables** use a dereferenced struct-pointer:
 
 ```c
-stem->identifier
+*stem->identifier         /* read */
+*stem->identifier = value /* write */
 ```
 
-For example, a variable `output` imported with stem `std` is accessed as `std->output`.
+**Functions** use a direct struct-pointer call:
+
+```c
+stem->identifier(args)
+```
+
+For example, a function `output` imported with stem `std` is called as `std->output(greeting)`.
 
 This distinction means that types read naturally in declarations, while variables and functions carry an explicit access path that makes the origin of each identifier visible at the call site.
 
@@ -104,16 +111,14 @@ typedef void (*Output)(Greeting greeting);
 #include "export/output"
 ```
 
-`output/stdout.c` imports the interface, defines a conforming implementation, and exports it as the named parcel `stdout`. The internal function `print` is `static` and not in the interface; only the `output` function pointer is exported:
+`output/stdout.c` imports the interface, defines a conforming implementation, and exports it as the named parcel `stdout`:
 
 ```c
 #include "import/output/_.out"
 
 #pragma parcel stdout { output }
 
-static void print(out_Greeting greeting) { ... }
-
-out_Output output = print;
+void output(out_Greeting greeting) { ... }
 
 #include "export/output/stdout"
 ```
