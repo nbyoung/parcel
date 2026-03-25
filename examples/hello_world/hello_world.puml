@@ -15,9 +15,7 @@ end note
 
 ' ── Implementation: stdout ──────────────────────────────────────────
 class "output / stdout" as Stdout <<parcel stdout>> {
-  + output : out_Output
-  --
-  - print(greeting : out_Greeting) : void
+  + output(greeting : out_Greeting) : void
 }
 note right of Stdout
   output/stdout.c
@@ -28,9 +26,7 @@ end note
 
 ' ── Implementation: null ────────────────────────────────────────────
 class "output / null" as Null <<parcel null>> {
-  + output : out_Output
-  --
-  - null(greeting : out_Greeting) : void
+  + output(greeting : out_Greeting) : void
 }
 note right of Null
   output/null.c
