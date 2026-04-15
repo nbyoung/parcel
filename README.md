@@ -11,6 +11,7 @@ Follow these links for more details.
 
 * [Language semantics](SEMANTICS.md)
 * ["Hello, world!" example](examples/hello_world/README.md)
+* [Parcel translation](TRANSLATION.md)
 * [_Parcelator_ translator](https://github.com/nbyoung/parcelator)
 
 ## Motivation

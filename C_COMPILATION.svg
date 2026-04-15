@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="630" viewBox="0 0 600 630">
+
+    <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7"
+            refX="9" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#444"/>
+    </marker>
+    </defs>
+
+    <rect width="600" height="630" fill="#f8f9fa" rx="4"/>
+
+    <text x="300" y="26" text-anchor="middle"
+        font-family="sans-serif" font-size="15" font-weight="bold" fill="#222">
+    C Compilation
+</text>
+
+    <!-- *.c source files (folded corner) -->
+    <polygon points="85,42 207,42 225,60 225,108 85,108"
+            fill="#fffde7" stroke="#f9a825" stroke-width="1.5"/>
+    <polygon points="207,42 225,60 207,60"
+            fill="#f9a825" fill-opacity="0.3" stroke="#f9a825" stroke-width="1"/>
+    <text x="155" y="71" text-anchor="middle"
+        font-family="monospace" font-size="15" font-weight="bold" fill="#444">*.c</text>
+    <text x="155" y="90" text-anchor="middle"
+        font-family="sans-serif" font-size="10" fill="#888">source files</text>
+
+    <!-- *.h header files (folded corner) -->
+    <polygon points="375,42 497,42 515,60 515,108 375,108"
+            fill="#e8f5e9" stroke="#43a047" stroke-width="1.5"/>
+    <polygon points="497,42 515,60 497,60"
+            fill="#43a047" fill-opacity="0.3" stroke="#43a047" stroke-width="1"/>
+    <text x="445" y="71" text-anchor="middle"
+        font-family="monospace" font-size="15" font-weight="bold" fill="#444">*.h</text>
+    <text x="445" y="90" text-anchor="middle"
+        font-family="sans-serif" font-size="10" fill="#888">header files</text>
+
+    <!-- Arrows: *.c and *.h → Preprocessor -->
+    <line x1="155" y1="108" x2="254" y2="204"
+        stroke="#444" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="445" y1="108" x2="346" y2="204"
+        stroke="#444" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- "Compile" enclosing dashed box -->
+    <rect x="108" y="166" width="384" height="314" rx="14"
+          fill="none" stroke="#999" stroke-width="1.5" stroke-dasharray="8,5"/>
+    <text x="300" y="185" text-anchor="middle"
+        font-family="sans-serif" font-size="12" font-weight="bold" fill="#999">C Compiler</text>
+
+    <!-- Preprocessor stage -->
+    <ellipse cx="300" cy="232" rx="118" ry="30"
+            fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+    <text x="300" y="227" text-anchor="middle"
+        font-family="sans-serif" font-size="13" font-weight="bold" fill="#1565c0">Preprocess</text>
+    <text x="300" y="245" text-anchor="middle"
+        font-family="monospace" font-size="9.5" fill="#1976d2">cc -E source.c -o source.i</text>
+
+    <!-- Arrow: Preprocessor → *.i -->
+    <line x1="300" y1="262" x2="300" y2="306"
+        stroke="#444" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- *.i translation units (plain rect, no fold) -->
+    <rect x="228" y="308" width="144" height="52"
+          fill="#fff3e0" stroke="#ef6c00" stroke-width="1.5" rx="3"/>
+    <text x="300" y="330" text-anchor="middle"
+        font-family="monospace" font-size="14" font-weight="bold" fill="#444">*.i</text>
+    <text x="300" y="349" text-anchor="middle"
+        font-family="sans-serif" font-size="10" fill="#888">translation units</text>
+
+    <!-- Arrow: *.i → Compiler -->
+    <line x1="300" y1="360" x2="300" y2="402"
+        stroke="#444" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- Compiler stage -->
+    <ellipse cx="300" cy="432" rx="118" ry="30"
+            fill="#f3e5f5" stroke="#6a1b9a" stroke-width="2"/>
+    <text x="300" y="427" text-anchor="middle"
+        font-family="sans-serif" font-size="13" font-weight="bold" fill="#6a1b9a">Compile</text>
+    <text x="300" y="445" text-anchor="middle"
+        font-family="monospace" font-size="9.5" fill="#7b1fa2">cc source.i -o main</text>
+
+    <!-- Arrow: Compiler → main -->
+    <line x1="300" y1="462" x2="300" y2="526"
+        stroke="#444" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- main executable (folded corner) -->
+    <polygon points="228,528 354,528 372,546 372,604 228,604"
+            fill="#e8eaf6" stroke="#283593" stroke-width="2"/>
+    <polygon points="354,528 372,546 354,546"
+            fill="#283593" fill-opacity="0.3" stroke="#283593" stroke-width="1.5"/>
+    <text x="300" y="562" text-anchor="middle"
+        font-family="monospace" font-size="16" font-weight="bold" fill="#283593">main</text>
+    <text x="300" y="582" text-anchor="middle"
+        font-family="sans-serif" font-size="10" fill="#888">executable</text>
+
+</svg>
