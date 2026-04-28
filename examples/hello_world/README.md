@@ -42,22 +42,17 @@ _parcel/            ← semantics: contains the translated #include files
   import/           ← semantics: contains the translated import files
 ```
 
-## Module structure
-
-![UML class diagram of the hello_world parcel structure](hello_world.svg)
-
-The interface parcel (`output/_`) defines only types. Both implementation parcels (`output/stdout` and `output/null`) conform to it independently. The selector header (`output.h`) conditionally imports exactly one implementation at build time, controlled by the `-DOUTPUT_NULL` compiler flag. The consumer (`main`) includes the selector and calls through the `OUT` macro — `OUT->output(greeting)` — without naming the implementation directly.
-
 ## The interface parcel (`output.c`)
 
 `output.c` defines the shared vocabulary for all output implementations: a `Greeting` type and an `Output` function-pointer type. It declares and exports a **default parcel** (`_`), placing it in the `output` namespace.
 
 ```c
-#pragma parcel _ { Greeting Output }
-
 typedef char *Greeting;
 typedef void (*Output)(Greeting greeting);
 
+#pragma  parcel _
+#pragma      typedef: Greeting
+#pragma      function: Output
 #include "export/output/_"
 ```
 
@@ -74,12 +69,12 @@ Each implementation imports the interface with stem `out` and exports its own **
 
 #include "import/output/_.out"
 
-#pragma parcel stdout { output }
-
 void output(out_Greeting greeting) {
     printf("%s\n", greeting);
 }
 
+#pragma  parcel stdout
+#pragma      function: output
 #include "export/output/stdout"
 ```
 
@@ -90,11 +85,11 @@ void output(out_Greeting greeting) {
 ```c
 #include "import/output/_.out"
 
-#pragma parcel null { output }
-
 void output(out_Greeting greeting) {
 }
 
+#pragma  parcel null
+#pragma      function: output
 #include "export/output/null"
 ```
 
@@ -141,15 +136,14 @@ Switching implementations requires no changes to `main.c` — only the compiler 
 
 | Concept | Where |
 |--|--|
-| Default parcel (`_`) | `output.c` — `#pragma parcel _ { Greeting Output }` |
-| Named parcel | `output/stdout.c` — `#pragma parcel stdout { output }` |
-| Named parcel | `output/null.c` — `#pragma parcel null { output }` |
+| Default parcel (`_`) | `output.c` — `#pragma parcel _` |
+| Named parcel | `output/stdout.c` — `#pragma parcel stdout` |
+| Named parcel | `output/null.c` — `#pragma parcel null` |
 | Typedef in interface | `output.c` — `Greeting`, `Output` |
 | Function in interface | `output/stdout.c`, `output/null.c` — `output` |
 | Export with namespace path | `output.c` — `export/output` |
 | Export with namespace path | `output/stdout.c` — `export/output/stdout` |
 | Export with namespace path | `output/null.c` — `export/output/null` |
-| Import with stem | `output/stdout.c`, `output/null.c` — `import/output/_.out` |
 | Import with stem | `output/stdout.c`, `output/null.c` — `import/output/_.out` |
 | Import with stem | `output.h` — `import/output/stdout.std`, `import/output/null.null` (conditional) |
 | Typedef stem prefix | `output/stdout.c`, `output/null.c` — `out_Greeting` |

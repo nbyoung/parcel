@@ -32,29 +32,26 @@ See the [_Parcelator_](https://github.com/nbyoung/parcelator) project for a tran
 
 ## Concepts
 
-### Declaring a parcel
+### Declaring and exporting a parcel
 
-A parcel is declared with a `#pragma` statement that names the parcel and lists the local identifiers it exports:
-
-```c
-#pragma parcel <name> { [<identifier> ...] }
-```
-
-The interface lists the typedefs, variables, and functions defined in the exporting file. The parcel makes these definitions available to the parcel importers.
-
-By convention, the name `_` denotes the **default parcel** for a file — typically an interface or utility parcel that other files import to obtain shared types. Named parcels (any name other than `_`) are typically implementations or components.
-
-### Exporting a parcel
-
-A parcel is exported from the same file in which it is declared, by including a generated export file:
+A parcel is declared as a block that opens with `#pragma parcel <name>`, affirms each exported identifier's kind on a labeled line, and closes with the export include:
 
 ```c
+#pragma  parcel <name>
+#pragma      typedef: t1, t2, ...
+#pragma      constant: c1, c2, ...
+#pragma      variable: v1, v2, ...
+#pragma      function: f1, f2, ...
 #include "export/<path>/<name>"
 ```
 
-The export path places the parcel in a programmer-defined namespace. The string `export` defines the literal base segment of the `#include` file path; `<path>` reflects the specific filesystem location; `<name>` matches the parcel name from the `#pragma`.
+The kind labels — `typedef:`, `constant:`, `variable:`, `function:` — affirm the kind of each exported identifier as defined in the same file. Only the kinds present in the parcel are required; unused labels may be omitted.
 
-The export statement must appear in the same file as the corresponding `#pragma parcel` declaration after all of the exported identifier definitions.
+The export include closes the block and triggers generation. It must appear in the same file after all of the exported identifier definitions.
+
+The export path places the parcel in a programmer-defined namespace. The string `export` defines the literal base segment of the `#include` file path; `<path>` reflects the specific filesystem location; `<name>` matches the parcel name from the opening `#pragma parcel` line.
+
+By convention, the name `_` denotes the **default parcel** for a file — typically an interface or utility parcel that other files import to obtain shared types. Named parcels (any name other than `_`) are typically implementations or components.
 
 ### Importing a parcel
 
@@ -97,14 +94,16 @@ For example, a function `output` imported with stem `std` is called as `std->out
 
 | Statement | |
 |--|--|
-| Declare | `#pragma parcel <name> { [<identifier> ...] }` |
-| Export | `#include "export/<path>/<name>"` |
+| Open declaration | `#pragma parcel <name>` |
+| Kind label | `#pragma typedef:` / `constant:` / `variable:` / `function:` `<id>, ...` |
+| Export (closes declaration) | `#include "export/<path>/<name>"` |
 | Import | `#include "import/<path>/<name>.<stem>"` |
 
 | Term | Meaning |
 |--|--|
 | `<name>` | Any valid C identifier; By convention, `_` denotes the exporting file's _default_ parcel |
-| `{ [<identifier> ...] }` | The parcel interface comprising the typedefs, variables, and functions defined in the local file |
+| `typedef:` / `constant:` / `variable:` / `function:` | Kind label affirming the declared kind of each exported identifier |
+| `<id>, ...` | Comma-separated identifiers of the declared kind |
 | `<path>` | Namespace path, typically reflecting the filesystem location of the parcel |
 | `<stem>` | A short C identifier fragment that scopes the imported identifiers within the importing file |
 
@@ -119,11 +118,12 @@ The [`examples/hello_world`](examples/hello_world/) example demonstrates modular
 `output.c` declares a **default parcel** (`_`) containing only types — a `Greeting` typedef and an `Output` function-pointer typedef. This is the _output_ module interface:
 
 ```c
-#pragma parcel _ { Greeting Output }
-
 typedef char *Greeting;
 typedef void (*Output)(Greeting greeting);
 
+#pragma  parcel _
+#pragma      typedef: Greeting
+#pragma      function: Output
 #include "export/output/_"
 ```
 
@@ -132,10 +132,10 @@ typedef void (*Output)(Greeting greeting);
 ```c
 #include "import/output/_.out"
 
-#pragma parcel stdout { output }
-
 void output(out_Greeting greeting) { ... }
 
+#pragma  parcel stdout
+#pragma      function: output
 #include "export/output/stdout"
 ```
 

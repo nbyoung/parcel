@@ -14,11 +14,19 @@ The translator validates parcel declarations across all scanned source files and
 
 Error messages indicate input conditions from which the translator cannot generate correct output. Consequently, the affected `export/` and `import/` files are not generated.
 
-**Undefined identifier.** An identifier listed in a `#pragma parcel` declaration has no corresponding C definition in the same translation unit, i.e., file.
+**Undefined identifier.** An identifier listed under a kind label in a `#pragma parcel` block has no corresponding C definition in the same translation unit, i.e., file.
 
-**Orphan export.** A file contains `#include "export/<path>/<name>"` but no `#pragma parcel <name>` declaration. The translator has no interface from which to generate the export file.
+**Duplicate interface identifier.** The same identifier is listed more than once for the same parcel.
 
-**Undefned export.** A file contains `#include "import/<path>/<name>.<stem>"` but with no corresponding `#include "export/..."` statement for that parcel name. The translator has no interface from which to derive the _import_ file.
+**Label mismatch.** An identifier listed under a `#pragma <kind>:` label has a C declaration whose kind conflicts with the stated kind. For example, listing a typedef identifier under `function:`, or a function identifier under `constant:`.
+
+**Unexported parcel.** A `#pragma parcel <name>` block is opened but no corresponding `#include "export/.../<name>"` appears in the file. The parcel is declared but never exported.
+
+**Redeclared parcel.** A second or subsequent `#pragma parcel <name>` declaration appears for the same parcel `<name>` within the same source file.  
+
+**Orphan export.** A file contains `#include "export/<path>/<name>"` but no open `#pragma parcel <name>` block. The translator has no interface from which to generate the export file.
+
+**Undefined export.** A file contains `#include "import/<path>/<name>.<stem>"` but with no corresponding `#include "export/..."` statement for that parcel name. The translator has no interface from which to derive the _import_ file.
 
 **Path-name collision.** Two distinct `<path>/<name>` pairs produce the same canonical prefix after replacing `/` with `_`. For example, path `foo_bar` with name `p` and path `foo` with name `bar_p` both yield the prefix `foo_bar_p_`. Any identifiers exported by either parcel would receive identical canonical names, making the generated files mutually incompatible. This collision cannot be resolved at the identifier level; it is an error regardless of whether the affected parcels share any identifier names. It must be resolved by renaming one of the paths or parcel names.
 
@@ -28,16 +36,8 @@ Error messages indicate input conditions from which the translator cannot genera
 
 Warning messages indicate parcel declarations that do not prevent generation but are likely to cause compile-time failures or unintended behaviour.
 
-**Unexported parcel.** A `#pragma parcel` declaration has no `#include "export/..."` following it in the file. The parcel is declared but never exported.
-
 **Exported static identifier.** An identifier listed in a `#pragma parcel` declaration is declared `static` in the same file. Static identifiers have internal linkage and are not accessible to importers; the generated export file will compile but the exported name will be unusable in other translation units.
 
 **Canonical name conflict.** A user-defined identifier in the file has the same spelling as a canonical name the translator is about to generate (for example, a local definition of `foo_p_T` in `foo.c`). The generated typedef will produce a redefinition error at compile time.
 
-**Duplicate interface identifier.** The same identifier is listed more than once for the same parcel. This warning also applies where the same identifier appears in different `#pragma parcel` declarations for the same parcel. (See the note, _Cumulative parcel identifiers_.) 
-
 **Unused import.** A parcel import applies `<stem>` but no corresponding `<stem>`-qualified identifiers appearing in the C code.
-
-## Notes
-
-**Cumulative parcel identifiers.** It is valid for multiple parcel declarations to appear in the same file with the same parcel name. Such a set of declarations is equivalent to a single parcel declaration at the position of the last statement, but with the cumulative set of identifiers from all statements listed. Note that the _Duplicate interface identifier_ warning still applies.

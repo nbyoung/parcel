@@ -2,10 +2,10 @@
 
 #include "import/output/_.out"
 
-#pragma parcel stdout { output }
-
 void output(out_Greeting greeting) {
     printf("%s\n", greeting);
 }
 
+#pragma  parcel stdout
+#pragma      function: output
 #include "export/output/stdout"

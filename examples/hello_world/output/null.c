@@ -1,8 +1,8 @@
 #include "import/output/_.out"
 
-#pragma parcel null { output }
-
 void output(out_Greeting greeting) {
 }
 
+#pragma  parcel null
+#pragma      function: output
 #include "export/output/null"
