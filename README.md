@@ -24,7 +24,7 @@ C has headers and translation units, but no modular encapsulation. Header files 
 
 Even with disciplined use of header files, large C programs tend toward tight coupling. Programmers come to depend on implementation details. Substituting behaviour requires changing the call sites.
 
-Parcel adds a lightweight module layer on top of standard C. A _parcel_ is a named set of identifiers — typedefs, variables, or functions — declared in one file and made available in others. A file that declares an interface parcel containing only types can be imported by any number of implementation files, each of which exports a conforming parcel under its own name. A module consumer imports whichever implementation it needs. The types are consistent across all implementations, and call sites do not change when substituting alternative implementations.
+Parcel adds a lightweight module layer on top of standard C. A _parcel_ is a named set of identifiers — typedefs, constants, variables, and functions — declared in one file and made available in others. A file that declares an interface parcel containing only types can be imported by any number of implementation files, each of which exports a conforming parcel under its own name. A module consumer imports whichever implementation it needs. The types are consistent across all implementations, and call sites do not change when substituting alternative implementations.
 
 The Parcel language applies at the source level, before the preprocessor. It requires no changes to the compiler toolchain.
 
@@ -34,7 +34,7 @@ See the [_Parcelator_](https://github.com/nbyoung/parcelator) project for a tran
 
 ### Declaring and exporting a parcel
 
-A parcel is declared as a block that opens with `#pragma parcel <name>`, affirms each exported identifier's kind on a labeled line, and closes with the export include:
+A parcel is declared as a block that opens with `#pragma parcel <name>`, affirms each exported identifier's kind on a labeled line, and closes with the export `#include`:
 
 ```c
 #pragma  parcel <name>
@@ -47,7 +47,7 @@ A parcel is declared as a block that opens with `#pragma parcel <name>`, affirms
 
 The kind labels — `typedef:`, `constant:`, `variable:`, `function:` — affirm the kind of each exported identifier as defined in the same file. Only the kinds present in the parcel are required; unused labels may be omitted.
 
-The export include closes the block and triggers generation. It must appear in the same file after all of the exported identifier definitions.
+The export `#include` closes the block and triggers generation. It must appear in the same file after all of the exported identifier definitions.
 
 The export path places the parcel in a programmer-defined namespace. The string `export` defines the literal base segment of the `#include` file path; `<path>` reflects the specific filesystem location; `<name>` matches the parcel name from the opening `#pragma parcel` line.
 
@@ -112,8 +112,6 @@ The relationship between export path and import path is not specified by the Par
 ## Example
 
 The [`examples/hello_world`](examples/hello_world/) example demonstrates modular abstraction using an interface parcel and two interchangeable implementations, `stdout` and `null`.
-
-![UML class diagram of the hello_world example](examples/hello_world/hello_world.svg)
 
 `output.c` declares a **default parcel** (`_`) containing only types — a `Greeting` typedef and an `Output` function-pointer typedef. This is the _output_ module interface:
 
