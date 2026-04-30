@@ -1,6 +1,10 @@
 # Parcel Translation
 
-Parcel translation generates the `export/` and `import/` _include_ files that express the modular semantics in standard C. The translator runs _before_ the C preprocessor. It scans the C source files for `#pragma parcel` declarations along with the necessary _export_- and _import_ `#include` directives. It generates the corresponding _export_ and _import_ files which the regular C preprocessor includes during the subsequent _build_ step, leaving the compiler toolchain otherwise unchanged.
+Parcel translation generates the `export/` and `import/` _include_ files that express the modular semantics in standard C.
+
+Translation applies three phases. The _extraction_ phase scans the original Parcel source files and extracts the parcel interface _declarations_, as well as each declaration's associated _export_ statement, and any parcel _import_ statements. The _analysis_ phase analyses the parcel declarations within the context of their enclosing C source code, thereby determining the parcel interface identifier definitions, as well as the parcel export-import relationships. If the analysis determines that the declared parcels and their relationships are correct and complete, then the _generation_ phase generates their modular semantic representations in ordinary C files that the original source files `#include` through their respective export and import statements.
+
+ The original Parcel source files, augmented with the translator-generated `#include` files, comprise a complete C program that can be compiled in the usual way using a conventional compiler toolchain.
 
 <figure>
   <img src="PARCEL_TRANSLATION.svg" alt="Parcel Translation">

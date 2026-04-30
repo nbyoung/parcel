@@ -1,6 +1,6 @@
 # Parcel Semantics
 
-The _Parcel_ language semantics comprise the _export_ and _import_ `#include` files that express the `parcel` encapsulation. The following sections specify the generated file contents for the _typedef_, _variable_, _constant_ and _function_ identifiers that comprise the parcel interface. For an overview of the translation process and its diagnostics, see [TRANSLATION.md](TRANSLATION.md).
+The _Parcel_ language semantics comprise the _export_ and _import_ `#include` files that express the `parcel` encapsulation. The following sections specify the generated file contents for the _typedef_, _constant_, _variable_ and _function_ identifiers that comprise the parcel interface. For an overview of the translation process and its diagnostics, see [TRANSLATION.md](TRANSLATION.md).
 
 ## Type expansion
 
@@ -62,13 +62,13 @@ const struct <canonical> *<stem> = &<canonical>;
 
 The importing file applies the `<stem>_<Id>` type wherever it is needed to declare variables, function parameters, return values, struct members, or further typedefs.
 
-### Variables
-
-The importer reads a variable as `*<stem>-><id>` and writes to it as `*<stem>-><id> = <value>`.
-
 ### Constants
 
 The importer reads the value as `*<stem>-><id>`; any attempt to assign to `*<stem>-><id>` is a compile-time error.
+
+### Variables
+
+The importer reads a variable as `*<stem>-><id>` and writes to it as `*<stem>-><id> = <value>`.
 
 ### Functions
 

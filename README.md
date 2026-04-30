@@ -2,6 +2,8 @@
 
 The _Parcel_ encapsulation language brings simple modules, called _parcels_, to C.
 
+A Parcel program comprises a set of source files which, although written purely in C, is not a complete C program and cannot be compiled directly. Instead, a [Parcel translator](TRANSLATION.md) transforms the Parcel program into a C program by generating the necessary `#include` files that implement the module [semantics](SEMANTICS.md). The original Parcel source files, augmented with the translator-generated files, comprise a complete C program that can be compiled in the usual way using a conventional compiler toolchain.
+
 * [Motivation](#motivation)
 * [Concepts](#concepts)
 * [Syntax](#syntax-reference)
@@ -12,7 +14,7 @@ Follow these links for more details.
 * [Language semantics](SEMANTICS.md)
 * ["Hello, world!" example](examples/hello_world/README.md)
 * [Parcel translation](TRANSLATION.md)
-* [_Parcelator_ translator](https://github.com/nbyoung/parcelator)
+* [_Parciler_ translator](https://github.com/nbyoung/parciler)
 
 ## Motivation
 
@@ -25,10 +27,6 @@ C has headers and translation units, but no modular encapsulation. Header files 
 Even with disciplined use of header files, large C programs tend toward tight coupling. Programmers come to depend on implementation details. Substituting behaviour requires changing the call sites.
 
 Parcel adds a lightweight module layer on top of standard C. A _parcel_ is a named set of identifiers — typedefs, constants, variables, and functions — declared in one file and made available in others. A file that declares an interface parcel containing only types can be imported by any number of implementation files, each of which exports a conforming parcel under its own name. A module consumer imports whichever implementation it needs. The types are consistent across all implementations, and call sites do not change when substituting alternative implementations.
-
-The Parcel language applies at the source level, before the preprocessor. It requires no changes to the compiler toolchain.
-
-See the [_Parcelator_](https://github.com/nbyoung/parcelator) project for a translator implementation.
 
 ## Concepts
 
